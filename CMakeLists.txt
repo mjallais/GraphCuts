@@ -12,8 +12,6 @@ source_files
 *.[cht]pp
 )
 
-SET(CMAKE_BUILD_TYPE Debug)
-SET(CMAKE_CXX_COMPILER "g++")
 ADD_DEFINITIONS( -Wall -Wextra -std=c++11 -Wno-comment -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable -fopenmp -DCORRECTION -DNDEBUG)
 
 add_executable(

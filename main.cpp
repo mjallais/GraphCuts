@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "graph.h"
-
+#include "mincut.hpp"
 #include "opencv2/opencv.hpp"
 #include <opencv2/core/core.hpp>
 
@@ -13,33 +13,8 @@ float norm(cv::Vec3b a)
 
 int main()
 {
-//    typedef Graph<int,int,int> GraphType;
-//    GraphType *g = new GraphType(/*estimated # of nodes*/ 2, /*estimated # of edges*/ 1);
-
-//    g -> add_node();
-//    g -> add_node();
-
-//    g -> add_tweights( 0,   /* capacities */  5, 1 );
-//    g -> add_tweights( 1,   /* capacities */  2, 6 );
-//    g -> add_edge( 0, 1,    /* capacities */  3, 4 );
-
-//    int flow = g -> maxflow();
-
-//    printf("Flow = %d\n", flow);
-//    printf("Minimum cut:\n");
-//    if (g->what_segment(0) == GraphType::SOURCE)
-//        printf("node0 is in the SOURCE set\n");
-//    else
-//        printf("node0 is in the SINK set\n");
-//    if (g->what_segment(1) == GraphType::SOURCE)
-//        printf("node1 is in the SOURCE set\n");
-//    else
-//        printf("node1 is in the SINK set\n");
-
-//    delete g;
-    
     // READ IMAGE
-    cv::Mat image = cv::imread("../maxflow-v3.01/images/fraise.jpg");
+    cv::Mat image = cv::imread("../GraphCuts/images/fraise.jpg");
     if (!image.data)
     {
         std::cout << "Error reading file 1 "<< "image/" << std::endl;
@@ -49,6 +24,8 @@ int main()
     //imshow("Image de base", image); cv::waitKey(0);
 
     int superp = 100;
+
+    minCut min(700,1000);
 
     cv::Mat old_synthese =  cv::Mat::zeros(700, 1000, CV_8UC3);
     cv::Mat new_synthese =  cv::Mat::zeros(700, 1000, CV_8UC3);
