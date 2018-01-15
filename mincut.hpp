@@ -11,21 +11,35 @@ public:
     minCut(cv::Mat _texture, int rows, int cols);
 
     void init();
-
+    /** Update the mask of the image */
     void update_mask(cv::Point2i t);
+
+    /** Update the zone where the Image and the new patch met */
+    cv::Point2i update_overlap_zone(cv::Point2i t);
 
     /** Find the best position for the next patch */
     cv::Point2i patch_placement(int nb_pixels);
 
+    /** Debug fonction to show an matrix */
+    void mat_affichage(cv::Mat mat);
+    /** Test is we have filled all the image or not */
+    bool allImageFilled();
+
+    /** Run fonction that execute the algorithm */
     void compute_minCut();
 
 private:
-
+    /** Matrix of the texture that we want to reproduce */
     cv::Mat texture;
-
+    /** Matrix which stores the avancement of the algorithm */
     cv::Mat old_synthese;
     cv::Mat new_synthese;
+
+    /** Is a mask of old_synthess */
     cv::Mat mask; // Useful to know if a pixel has been filled or not with the new texture (0 = not filled ; 1 = filled)
+
+    /** Mask of the overlap zone where the image and the new texture met */
+    cv::Mat overlap_zone;
 
     /** bordure_mask store the top,bottom,left,right borders of the mask*/
     cv::Vec4i border_mask;
@@ -41,6 +55,12 @@ private:
     /** Size of the patch (input image) */
     int patchRows;
     int patchCols;
+
+
+    /** Size of the overlap zone */
+    int overlapRows;
+    int overlapCols;
+
 
     /** Test if a translation is valid or not */
     bool isTranslationValid(cv::Point2i t);
