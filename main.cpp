@@ -25,7 +25,7 @@ int main()
 
     int superp = 100;
 
-    minCut min(700,1000);
+
 
     cv::Mat old_synthese =  cv::Mat::zeros(700, 1000, CV_8UC3);
     cv::Mat new_synthese =  cv::Mat::zeros(700, 1000, CV_8UC3);
