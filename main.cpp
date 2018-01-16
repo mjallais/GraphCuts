@@ -130,6 +130,7 @@ int main()
 //    imshow("Image", new_synthese); cv::waitKey(0);
 
 //    //std::cout<<"size image : cols = "<<image.cols<<" rows = "<<image.rows<<std::endl;
+
     return 0;
 }
 

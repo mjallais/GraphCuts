@@ -18,7 +18,7 @@ public:
     cv::Point2i update_overlap_zone(cv::Point2i t);
 
     /** Find the best position for the next patch */
-    cv::Point2i patch_placement(int nb_pixels);
+    cv::Point2i patch_placement(int &nb_pixels);
 
     /** Debug fonction to show an matrix */
     void mat_affichage(cv::Mat mat);
