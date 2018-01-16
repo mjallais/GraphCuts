@@ -12,7 +12,6 @@ minCut::minCut(cv::Mat _texture) : imRows(100), imCols(100), overlapCols(0), ove
     mask =  cv::Mat::zeros(imRows, imCols, CV_8UC1);
     overlap_zone = cv::Mat::zeros(imRows,imCols,CV_8UC1);
 
-
     maxSuperposedPixel = 256;
     minSuperPosedPixel = 256;
 
@@ -43,7 +42,7 @@ minCut::minCut(cv::Mat _texture, int rows, int cols) : overlapCols(0), overlapRo
 void minCut::init()
 {
     // Copie de l'image originale dans l'image de synthèse que l'on cherche à créer
-    cv::Point2i t (floor(imRows/4),floor(imCols/4));
+    cv::Point2i t (floor(imRows/8),floor(imCols/8));
     texture(cv::Range(0,patchRows),cv::Range(0,patchCols)).copyTo(old_synthese(cv::Rect(t.y, t.x, patchCols, patchRows)));
     old_synthese.copyTo(new_synthese);
 
@@ -53,7 +52,6 @@ void minCut::init()
 
 void minCut::update_mask(cv::Point2i t)
 {
-
     for(int u=0; u<patchRows; ++u)
         for(int v=0; v<patchCols; ++v)
         {
@@ -85,6 +83,9 @@ cv::Point2i minCut::update_overlap_zone(cv::Point2i t)
     overlapCols = 0;
     bool first=true;
     int n=0;
+    std::cout<<"patchRows = "<< patchRows<<" patchCols = "<<patchCols<<std::endl;
+    std::cout<<"update_overlpa_zone : t = "<<t.x<<" "<<t.y<<std::endl;
+
     for(int u=0; u<patchRows; ++u)
     {
         for(int v=0; v<patchCols; ++v)
@@ -107,45 +108,41 @@ cv::Point2i minCut::update_overlap_zone(cv::Point2i t)
             overlapCols=n;
         n=0;
     }
-    std::cout<<"update_overlap_zone : overlapCols = "<<overlapCols << " overlapRows = "<<overlapRows<<std::endl;
 
     // On cherche à définir si les points appartiennent au nouveau patch ou à l'ancienne synthèse
     for(int u=0; u<overlapRows; ++u)
     {
-        // colonne de gauche
-        if(mask.at<uchar>(corner.x+u, corner.y-1) == 0 || mask.at<uchar>(corner.x+u, corner.y+1) == 0)
-        {
-            // Un des voisins n'appartenait pas à l'ancienne synthèse -> le point appartient forcément au nouveau patch
+        // colonne de gauche = corner.y
+        if(corner.y-1 >= t.y && corner.y-1 <= t.y+patchCols-1) // la colonne à droite de la colonne la plus à gauche de notre overlap se trouve dans le patch -> appartient au patch
             overlap_zone.at<uchar>(corner.x+u,corner.y) = 2;
-        }
-        else
+        else if(mask.at<uchar>(corner.x+u, corner.y-1) == 1) // si cette colonne est à coé d'une colonne appartenant au mask -> appartient à l'ancienne synthèse
             overlap_zone.at<uchar>(corner.x+u,corner.y) = 3;
+        //sinon appartient à ni l'un ni l'autre
 
-        // colonne de droite
-        if(mask.at<uchar>(corner.x+u, corner.y+(overlapCols-1)-1) == 0 || mask.at<uchar>(corner.x+u, corner.y+(overlapCols-1)+1) == 0)
-            overlap_zone.at<uchar>(corner.x+u,corner.y+overlapCols) = 2;
-        else
-            overlap_zone.at<uchar>(corner.x+u,corner.y+overlapCols) = 3;
+        // colonne de droite = corner.y+(overlapCols-1)
+        if(corner.y+(overlapCols-1)+1 >= t.y && corner.y+overlapCols <= t.y+patchCols-1) // appartient au patch
+            overlap_zone.at<uchar>(corner.x+u,corner.y+overlapCols-1) = 2;
+        else if(mask.at<uchar>(corner.x+u, corner.y+overlapCols) == 1)
+            overlap_zone.at<uchar>(corner.x+u,corner.y+overlapCols-1) = 3;
     }
 
     for(int v=0; v<overlapCols; ++v)
     {
-        // ligne du haut
-        if(mask.at<uchar>(corner.x-1, corner.y+v) == 0 || mask.at<uchar>(corner.x+1, corner.y+v) == 0)
+        // ligne du haut = corner.x
+        if(corner.x-1 >= t.x && corner.x-1 < t.x+patchRows)
             overlap_zone.at<uchar>(corner.x,corner.y+v) = 2;
-        else
+        else if(mask.at<uchar>(corner.x-1, corner.y+v) == 1)
             overlap_zone.at<uchar>(corner.x,corner.y+v) = 3;
 
-        // ligne du bas
-        if(mask.at<uchar>(corner.x+(overlapRows-1)-1, corner.y+v) == 0 || mask.at<uchar>(corner.x+(overlapRows-1)+1, corner.y+v) == 0)
-            overlap_zone.at<uchar>(corner.x+overlapRows,corner.y+v) = 2;
-        else
-            overlap_zone.at<uchar>(corner.x+overlapRows,corner.y+v) = 3;
+        // ligne du bas = corner.x+(overlapRows-1)
+        if(corner.x+(overlapRows-1)+1 >= t.x && corner.x+overlapRows < t.x+patchRows-1)
+            overlap_zone.at<uchar>(corner.x+overlapRows-1,corner.y+v) = 2;
+        else if(mask.at<uchar>(corner.x+overlapRows, corner.y+v) == 1)
+            overlap_zone.at<uchar>(corner.x+overlapRows-1,corner.y+v) = 3;
     }
 
     return corner;
 }
-
 
 
 // t : translation = position du coin en haut à gauche
@@ -194,9 +191,9 @@ float minCut::compute_translation_cost(cv::Mat &update_synthese, int i, int j, i
 
 cv::Point2i minCut::patch_placement(int &nb_pixels)
 {
-    float cost_min = 1000.0f;
+    float cost_min = 99999.0f;
 
-    cv::Point2i t;
+    cv::Point2i t(12,12);
     int min_i =0, max_i=imRows, min_j=0, max_j=imCols;
     if(border_mask[0]-patchRows > 0)
         min_i=border_mask[0]-patchRows ;
@@ -219,6 +216,7 @@ cv::Point2i minCut::patch_placement(int &nb_pixels)
                 old_synthese.copyTo(update_synthese);
                 texture(cv::Range(0,patchRows),cv::Range(0,patchCols)).copyTo(update_synthese(cv::Rect(j,i,patchCols,patchRows)));
                 float cost = compute_translation_cost(update_synthese, i, j, nb_pixels);
+                std::cout<<"cost = "<<cost<<std::endl;
                 if(cost < cost_min)
                 {
                     cost_min=cost;
@@ -226,6 +224,7 @@ cv::Point2i minCut::patch_placement(int &nb_pixels)
                 }
             }
         }
+
     return t;
 }
 
@@ -251,101 +250,126 @@ void minCut::mat_affichage(cv::Mat mat)
 void minCut::compute_minCut()
 {
     init();
-    int nb_pixels = 0;
-    cv::Point2i t = patch_placement(nb_pixels);
-    std::cout<<"Apres patch placement t = "<<t.x<<" "<<t.y<<std::endl;
-
-    texture(cv::Range(0,patchRows),cv::Range(0,patchCols)).copyTo(new_synthese(cv::Rect(t.y,t.x,patchCols,patchRows)));
-
-    imshow("Image old", old_synthese); cv::waitKey(0);
-    imshow("Image new", new_synthese); cv::waitKey(0);
-
-    std::cout<<"nb_pixels = "<<nb_pixels<<std::endl;
-    std::cout<<"overlapCols = "<<overlapCols<<" overlapRows = "<<overlapRows<<std::endl;
 
     typedef Graph<int,int,int> GraphType;
-    GraphType *g = new GraphType(/*estimated # of nodes*/ nb_pixels, /*estimated # of edges*/ (overlapCols-1)*(overlapRows-1));
+    GraphType *g = new GraphType(/*estimated # of nodes*/ /*nb_pixels*/ maxSuperposedPixel, /*estimated # of edges*/ (overlapCols-1)*(overlapRows-1));
 
-    g->add_node(nb_pixels);
+    for(int iter=0; iter<10; ++iter)
+    {
+        int nb_pixels = 0;
+        cv::Point2i t = patch_placement(nb_pixels);
+        //std::cout<<"Apres patch placement t = "<<t.x<<" "<<t.y<<std::endl;
 
-    cv::Point2i overlap_corner = update_overlap_zone(t);
-    std::cout<<"overlapCols = "<<overlapCols<<" overlapRows = "<<overlapRows<<std::endl;
+        texture(cv::Range(0,patchRows),cv::Range(0,patchCols)).copyTo(new_synthese(cv::Rect(t.y,t.x,patchCols,patchRows)));
 
-    cv::Mat overlap;
-    new_synthese.copyTo(overlap,overlap_zone);
-    imshow("overlap", overlap);cv::waitKey(0);
+        cv::imwrite("synthese_non_amelioree.png",new_synthese);
+        imshow("old", old_synthese); cv::waitKey(0);
+        imshow("new", new_synthese); cv::waitKey(0);
 
-    mat_affichage(overlap_zone);
+        //std::cout<<"overlapCols = "<<overlapCols<<" overlapRows = "<<overlapRows<<std::endl;
 
-    int num = 0;
-    for(int i=0; i<overlapRows; ++i) // lignes
-        for(int j=0; j<overlapCols; ++j) // colonnes
+        cv::Point2i overlap_corner = update_overlap_zone(t);
+
+        cv::Mat overlap;
+        new_synthese.copyTo(overlap,overlap_zone);
+        imshow("overlap", overlap);cv::waitKey(0);
+
+        std::cout<<"nb_pixels = "<<nb_pixels<<std::endl;
+        std::cout<<"overlapCols = "<<overlapCols<<" overlapRows = "<<overlapRows<<std::endl;
+
+        if(nb_pixels != overlapCols*overlapRows)
         {
-            // Calcul edge à droite et en bas pour chaque point dans les deux sens
-            int x_crt = overlap_corner.x + i;
-            int y_crt = overlap_corner.y + j;
-
-            if(i<overlapRows-1) // sauf bordure bas - calcul du cout avec le point en dessous et la réciproque
-            {
-                // liaison avec le point en dessous
-                int x_adj = x_crt;
-                int y_adj = y_crt + 1;
-                float cost_direct = norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt)) + norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj));
-                float cost_indirect = norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj)) + norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt));
-                g->add_edge(num, num+overlapRows, cost_direct, cost_indirect);
-            }
-
-            if(j<overlapCols-1) // sauf bordure droite - calcul du cout avec le point à droite et la réciproque
-            {
-                // liaison avec le point à droite
-                int x_adj = x_crt + 1;
-                int y_adj = y_crt;
-                float cost_direct = norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt)) + norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj));
-                float cost_indirect = norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj)) + norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt));
-                g->add_edge(num, num+1, cost_direct, cost_indirect);
-            }
-
-            if(mask.at<uchar>(x_crt,y_crt) == 2) // appartient au nouveau patch
-                g->add_tweights( num,   /* capacities old=source new=sink */ 0, 1000 );
-
-            if(mask.at<uchar>(x_crt,y_crt) == 3) // appartient à l'image de base
-                g->add_tweights( num,   /* capacities old=source new=sink*/ 1000, 0 );
-
-            ++num;
+            std::cout<<"Erreur : nb_pixels != overlapCols*overlapRows"<<std::endl;
+            exit(0);
         }
 
-    std::cout<<"num = "<<num<<std::endl;
+        g->add_node(nb_pixels);
 
-    //int flow = g -> maxflow();
+        mat_affichage(overlap_zone);
 
-//    printf("Flow = %d\n", flow);
-//    printf("Minimum cut:\n");
+        std::cout<<"overlap_corner = "<<overlap_corner.x <<" "<<overlap_corner.y<<std::endl;
 
-//    num=0;
-//    for(int i=0; i<overlapRows; ++i) // lignes
-//        for(int j=0; j<overlapCols; ++j) // colonnes
-//        {
-//            int x_crt = overlap_corner.x + i;
-//            int y_crt = overlap_corner.y + j;
-//            if(g->what_segment(num) == GraphType::SOURCE)
-//            {
-//                std::cout<<"old ";
-//                new_synthese.at<cv::Vec3b>(x_crt, y_crt) = old_synthese.at<cv::Vec3b>(x_crt, y_crt);
-//            }
-//            else if(g->what_segment(num) == GraphType::SINK)
-//            {
-//                std::cout<<"new ";
-//            }
-//            // Sinon appartient au SINK donc garde la valeur du new_synthese
-//            ++num;
-//        }
+        int num = 0;
+        for(int i=0; i<overlapRows; ++i) // lignes
+            for(int j=0; j<overlapCols; ++j) // colonnes
+            {
+                // Calcul edge à droite et en bas pour chaque point dans les deux sens
+                int x_crt = overlap_corner.x + i;
+                int y_crt = overlap_corner.y + j;
 
-//    delete g;
+                if(i<overlapRows-1) // sauf bordure bas - calcul du cout avec le point en dessous et la réciproque
+                {
+                    // liaison avec le point en dessous
+                    int x_adj = x_crt;
+                    int y_adj = y_crt + 1;
+                    float cost_direct = norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt)) + norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj));
+                    float cost_indirect = norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj)) + norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt));
+                    g->add_edge(num, num+overlapRows, cost_direct, cost_indirect);
+                    std::cout<<"en dessous: "<<cost_direct<<" "<<cost_indirect<<std::endl;
 
-    //imshow("Image", new_synthese); cv::waitKey(0);
+                }
 
-    //std::cout<<"size image : cols = "<<image.cols<<" rows = "<<image.rows<<std::endl;
+                if(j<overlapCols-1) // sauf bordure droite - calcul du cout avec le point à droite et la réciproque
+                {
+                    // liaison avec le point à droite
+                    int x_adj = x_crt + 1;
+                    int y_adj = y_crt;
+                    float cost_direct = norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt)) + norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj));
+                    float cost_indirect = norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj)) + norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt));
+                    g->add_edge(num, num+1, cost_direct, cost_indirect);
+                    std::cout<<"a droite: "<<cost_direct<<" "<<cost_indirect<<std::endl;
+                }
 
+                if(overlap_zone.at<uchar>(x_crt,y_crt) == 2) // appartient au nouveau patch
+                    g->add_tweights( num,   /* capacities old=source new=sink */ 0, 1000 );
+
+                if(overlap_zone.at<uchar>(x_crt,y_crt) == 3) // appartient à l'image de base
+                    g->add_tweights( num,   /* capacities old=source new=sink*/ 1000, 0 );
+
+                ++num;
+            }
+
+        std::cout<<"num = "<<num<<std::endl;
+
+        int flow = g -> maxflow();
+
+        //printf("Flow = %d\n", flow);
+        //printf("Minimum cut:\n");
+
+        num=0;
+        for(int i=0; i<overlapRows; ++i) // lignes
+            for(int j=0; j<overlapCols; ++j) // colonnes
+            {
+                int x_crt = overlap_corner.x + i;
+                int y_crt = overlap_corner.y + j;
+                if(g->what_segment(num) == GraphType::SOURCE)
+                {
+                    //std::cout<<"old ";
+                    new_synthese.at<cv::Vec3b>(x_crt, y_crt) = old_synthese.at<cv::Vec3b>(x_crt, y_crt);
+                }
+                else //if(g->what_segment(num) == GraphType::SINK)
+                {
+                    //std::cout<<"new ";
+                }
+                // Sinon appartient au SINK donc garde la valeur du new_synthese
+                ++num;
+            }
+
+        //delete g;
+
+        imshow("new", new_synthese); cv::waitKey(0);
+        cv::imwrite("new_synthese.png",new_synthese);
+
+
+        // Mise à jour pour l'itération suivante
+        new_synthese.copyTo(old_synthese);
+        update_mask(t);
+        overlap_zone.zeros(imRows,imCols,CV_8UC1);
+        g->reset();
+
+    }
+
+    delete g;
     return;
 }
 

@@ -21,115 +21,52 @@ int main()
         exit(0);
     }
 
-    minCut mincut(image,70,70);
+    minCut mincut(image,100,100);
 
     mincut.compute_minCut();
 
 
-
-
-
-//    //imshow("Image de base", image); cv::waitKey(0);
-
-//    int superp = 100;
-
-
-
-//    cv::Mat old_synthese =  cv::Mat::zeros(700, 1000, CV_8UC3);
-//    cv::Mat new_synthese =  cv::Mat::zeros(700, 1000, CV_8UC3);
-
-//    // Copie de l'image originale dans l'image de synthèse que l'on cherche à créer
-//    image(cv::Range(0,image.rows),cv::Range(0,image.cols)).copyTo(new_synthese(cv::Rect(300,400,image.cols,image.rows)));
-//    new_synthese.copyTo(old_synthese);
-
-//    image(cv::Range(0,image.rows),cv::Range(0,image.cols)).copyTo(new_synthese(cv::Rect(300,400-image.rows+superp,image.cols,image.rows)));
-//    imshow("Image new", new_synthese); cv::waitKey(0);
-//    //imshow("Image old", old_synthese); cv::waitKey(0);
-
-//    cv::Mat superp_new = cv::Mat::zeros(superp, image.cols, CV_8UC3);
-//    new_synthese(cv::Range(400,400+superp-1),cv::Range(300,300+image.cols)).copyTo(superp_new);
-//    cv::Mat superp_old = cv::Mat::zeros(superp, image.cols, CV_8UC3);
-//    old_synthese(cv::Range(400,400+superp-1),cv::Range(300,300+image.cols)).copyTo(superp_old);
-//    //imshow("Image", superp_new); cv::waitKey(0);
-//    //imshow("Image", superp_old); cv::waitKey(0);
-
+    /** TEST */
 //    typedef Graph<int,int,int> GraphType;
-//    GraphType *g = new GraphType(/*estimated # of nodes*/ superp*image.cols, /*estimated # of edges*/ (image.cols-1)*(superp-1));
+//    GraphType *g = new GraphType(/*estimated # of nodes*/ 4, /*estimated # of edges*/ 4);
 
-//    g->add_node(superp*image.cols);
+//    g -> add_node(4);
 
-//    int x_superp = 400;
-//    int y_superp = 300;
+//    g -> add_tweights( 0,   /* capacities */  0, 1000 );
+//    g -> add_edge( 0, 1,    /* capacities */  130, 130 );
+//    g -> add_edge( 0, 2,    /* capacities */  10, 10 );
 
-//    int num = 0;
-//    for(int i=0; i<superp; ++i) // lignes
-//        for(int j=0; j<image.cols; ++j) // colonnes
-//        {
-//            std::cout<<"num = "<<num<<std::endl;
-//            // Calcul edge à droite et en bas pour chaque point dans les deux sens
+//    g -> add_tweights( 1,   /* capacities */  0, 1000 );
+//    g -> add_edge( 1, 3,    /* capacities */  100, 100 );
 
-//            int x_crt = x_superp + i;
-//            int y_crt = y_superp + j;
-//            if(i<superp-1) // sauf bordure bas - calcul du cout avec le point en dessous et la réciproque
-//            {
-//                // liaison avec le point en dessous
-//                int x_adj = x_crt;
-//                int y_adj = y_crt + 1;
-//                float cost_direct = norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt)) + norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj));
-//                float cost_indirect = norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj)) + norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt));
-//                g->add_edge(num, num+image.rows, cost_direct, cost_indirect);
-//                std::cout<<"en dessous: "<<cost_direct<<" "<<cost_indirect<<std::endl;
-//            }
+//    g -> add_tweights( 2,   /* capacities */  1000, 0 );
+//    g -> add_edge( 2, 3,    /* capacities */  300, 300 );
 
-//            if(j<image.cols-1) // sauf bordure droite - calcul du cout avec le point à droite et la réciproque
-//            {
-//                // liaison avec le point à droite
-//                int x_adj = x_crt + 1;
-//                int y_adj = y_crt;
-//                float cost_direct = norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt)) + norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj));
-//                float cost_indirect = norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj)) + norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt));
-//                g->add_edge(num, num+1, cost_direct, cost_indirect);
-//                std::cout<<"a droite: "<<cost_direct<<" "<<cost_indirect<<std::endl;
-//            }
-
-//            if(i==0) // appartient au nouveau patch
-//                g->add_tweights( num,   /* capacities old=source new=sink */ 0, 1000 );
-
-//            if(i==superp-1) // appartient à l'image de base
-//                g->add_tweights( num,   /* capacities old=source new=sink*/ 1000, 0 );
-
-//            ++num;
-//        }
+//    g -> add_tweights( 3,   /* capacities */  1000, 0 );
 
 //    int flow = g -> maxflow();
 
 //    printf("Flow = %d\n", flow);
 //    printf("Minimum cut:\n");
-
-//    num=0;
-//    for(int i=0; i<superp; ++i) // lignes
-//        for(int j=0; j<image.cols; ++j) // colonnes
-//        {
-//            int x_crt = x_superp + i;
-//            int y_crt = y_superp + j;
-//            if(g->what_segment(num) == GraphType::SOURCE)
-//            {
-//                std::cout<<"old ";
-//                new_synthese.at<cv::Vec3b>(x_crt, y_crt) = old_synthese.at<cv::Vec3b>(x_crt, y_crt);
-//            }
-//            else if(g->what_segment(num) == GraphType::SINK)
-//            {
-//                std::cout<<"new ";
-//            }
-//            // Sinon appartient au SINK donc garde la valeur du new_synthese
-//            ++num;
-//        }
+//    if (g->what_segment(0) == GraphType::SOURCE)
+//        printf("node0 is in the SOURCE set\n");
+//    else
+//        printf("node0 is in the SINK set\n");
+//    if (g->what_segment(1) == GraphType::SOURCE)
+//        printf("node1 is in the SOURCE set\n");
+//    else
+//        printf("node1 is in the SINK set\n");
+//    if (g->what_segment(2) == GraphType::SOURCE)
+//        printf("node2 is in the SOURCE set\n");
+//    else
+//        printf("node2 is in the SINK set\n");
+//    if (g->what_segment(3) == GraphType::SOURCE)
+//        printf("node3 is in the SOURCE set\n");
+//    else
+//        printf("node3 is in the SINK set\n");
 
 //    delete g;
 
-//    imshow("Image", new_synthese); cv::waitKey(0);
-
-//    //std::cout<<"size image : cols = "<<image.cols<<" rows = "<<image.rows<<std::endl;
 
     return 0;
 }
