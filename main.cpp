@@ -11,6 +11,8 @@ float norm(cv::Vec3b a)
 }
 
 
+
+
 int main()
 {
     // READ IMAGE
@@ -21,7 +23,7 @@ int main()
         exit(0);
     }
 
-    minCut mincut(image,100,100);
+    minCut mincut(image,image.size[0]*3,image.size[1]*3);
 
     mincut.compute_minCut();
 

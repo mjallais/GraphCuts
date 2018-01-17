@@ -17,8 +17,13 @@ public:
     /** Update the zone where the Image and the new patch met */
     cv::Point2i update_overlap_zone(cv::Point2i t);
 
+    void update_seams(cv::Point2i corner, cv::Mat mask_seam, int index_patch);
+
     /** Find the best position for the next patch */
-    cv::Point2i patch_placement(int &nb_pixels);
+    cv::Point2i random_patch_placement(int &nb_pixels);
+    cv::Point2i entire_patch_matching_placement(int &nb_pixels);
+
+    float compute_cost_edge(int x_crt, int y_crt, int x_adj, int y_adj);
 
     /** Debug fonction to show an matrix */
     void mat_affichage(cv::Mat mat);
@@ -38,8 +43,11 @@ private:
     /** Is a mask of old_synthess */
     cv::Mat mask; // Useful to know if a pixel has been filled or not with the new texture (0 = not filled ; 1 = filled)
 
-    /** Mask of the overlap zone where the image and the new texture met */
+    /** Mask of the overlap zone where the image and the new texture met*/
     cv::Mat overlap_zone;
+
+    /** Contain the seams of previous cuts and their cost 1: patch the pixel belongs to, 2: point with which we compute the cost, 3: cost*/
+    cv::Mat seams;
 
     /** bordure_mask store the top,bottom,left,right borders of the mask*/
     cv::Vec4i border_mask;

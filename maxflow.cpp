@@ -478,14 +478,14 @@ template <typename captype, typename tcaptype, typename flowtype>
 	if (!nodeptr_block)
 	{
 		nodeptr_block = new DBlock<nodeptr>(NODEPTR_BLOCK_SIZE, error_function);
-	}
+    }
 
-	changed_list = _changed_list;
+    changed_list = _changed_list;
 	if (maxflow_iteration == 0 && reuse_trees) { if (error_function) (*error_function)("reuse_trees cannot be used in the first call to maxflow()!"); exit(1); }
 	if (changed_list && !reuse_trees) { if (error_function) (*error_function)("changed_list cannot be used without reuse_trees!"); exit(1); }
 
 	if (reuse_trees) maxflow_reuse_trees_init();
-	else             maxflow_init();
+    else             maxflow_init();
 
 	// main loop
 	while ( 1 )
@@ -561,7 +561,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 		TIME ++;
 
 		if (a)
-		{
+        {
 			i -> next = i; /* set active flag */
 			current_node = i;
 
@@ -570,27 +570,27 @@ template <typename captype, typename tcaptype, typename flowtype>
 			/* augmentation end */
 
 			/* adoption */
-			while ((np=orphan_first))
-			{
-				np_next = np -> next;
-				np -> next = NULL;
+            while ((np=orphan_first))
+            {
+                np_next = np -> next;
+                np -> next = NULL;
 
-				while ((np=orphan_first))
-				{
-					orphan_first = np -> next;
-					i = np -> ptr;
-					nodeptr_block -> Delete(np);
-					if (!orphan_first) orphan_last = NULL;
-					if (i->is_sink) process_sink_orphan(i);
-					else            process_source_orphan(i);
-				}
+                while ((np=orphan_first))
+                {
+                    orphan_first = np -> next;
+                    i = np -> ptr;
+                    nodeptr_block -> Delete(np);
+                    if (!orphan_first) orphan_last = NULL;
+                    if (i->is_sink) process_sink_orphan(i);
+                    else            process_source_orphan(i);
+                }
 
-				orphan_first = np_next;
-			}
+                orphan_first = np_next;
+            }
 			/* adoption end */
 		}
-		else current_node = NULL;
-	}
+        else current_node = NULL;
+    }
 	// test_consistency();
 
 	if (!reuse_trees || (maxflow_iteration % 64) == 0)
