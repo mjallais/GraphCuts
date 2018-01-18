@@ -19,14 +19,18 @@ public:
 
     void update_seams(cv::Point2i corner, cv::Mat mask_seam, int index_patch);
 
+    void update_init_value_seams(cv::Point2i corner);
+
     /** Find the best position for the next patch */
     cv::Point2i random_patch_placement(int &nb_pixels);
     cv::Point2i entire_patch_matching_placement(int &nb_pixels);
 
-    float compute_cost_edge(int x_crt, int y_crt, int x_adj, int y_adj);
+    float compute_cost_edge(int x_crt, int y_crt, int x_adj, int y_adj, cv::Mat A, cv::Mat B);
 
     /** Debug fonction to show an matrix */
     void mat_affichage(cv::Mat mat);
+    void mat_affichage_vec(cv::Mat mat); // matrix composed of cv::Vec3f
+
     /** Test is we have filled all the image or not */
     bool allImageFilled();
 
@@ -48,6 +52,9 @@ private:
 
     /** Contain the seams of previous cuts and their cost 1: patch the pixel belongs to, 2: point with which we compute the cost, 3: cost*/
     cv::Mat seams;
+
+    /** Contain the initial position in the pach of the seams (from their original patch)*/
+    cv::Mat init_value_seams;
 
     /** bordure_mask store the top,bottom,left,right borders of the mask*/
     cv::Vec4i border_mask;
