@@ -410,7 +410,6 @@ void minCut::compute_minCut()
         std::cout<<"t = "<<t.x<<" "<<t.y<<std::endl;
 
         texture(cv::Range(0,patchRows),cv::Range(0,patchCols)).copyTo(new_synthese(cv::Rect(t.y,t.x,patchCols,patchRows)));
-//        new_synthese(cv::Range(t.x,t.x+patchRows-1),cv::Range(t.y,t.y+patchCols-1)) = texture(cv::Range(0,patchRows-1),cv::Range(0,patchCols-1));
         cv::Point2i overlap_corner = update_overlap_zone(t);
 
         imshow("old", old_synthese); cv::waitKey(0);
