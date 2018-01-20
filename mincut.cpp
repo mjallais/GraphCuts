@@ -12,13 +12,13 @@ minCut::minCut(cv::Mat _texture) : imRows(100), imCols(100), overlapCols(0), ove
     new_synthese =  cv::Mat::zeros(imRows, imCols, CV_8UC3);
     mask =  cv::Mat::zeros(imRows, imCols, CV_8UC1);
     overlap_zone = cv::Mat::zeros(imRows,imCols,CV_8UC1);
-    seams = cv::Mat::zeros(imRows,imCols,CV_32FC3);
-    init_value_seams = cv::Mat(imRows, imCols, CV_16UC2, cv::Scalar(255,255));
+    seams = cv::Mat::zeros(imRows,imCols,CV_8UC2);
+    init_value_seams = cv::Mat(imRows, imCols, CV_8UC2, cv::Scalar(255,255));
 
     maxSuperposedPixel = 256;
     minSuperPosedPixel = 256;
 
-    border_mask = cv::Vec4i(0,imRows,0,imCols);
+    border_mask = cv::Vec4i(imRows,0,imCols,0);
 }
 
 
@@ -34,7 +34,7 @@ minCut::minCut(cv::Mat _texture, int rows, int cols) : overlapCols(0), overlapRo
     new_synthese =  cv::Mat::zeros(imRows, imCols, CV_8UC3);
     mask =  cv::Mat::zeros(imRows, imCols, CV_8UC1);
     overlap_zone = cv::Mat::zeros(imRows,imCols,CV_8UC1);
-    seams = cv::Mat::zeros(imRows,imCols,CV_32FC3);
+    seams = cv::Mat::zeros(imRows,imCols,CV_8UC2);
     init_value_seams = cv::Mat(imRows, imCols, CV_8UC2, cv::Scalar(255,255));
 
     maxSuperposedPixel = 256;
@@ -125,7 +125,7 @@ cv::Point2i minCut::update_overlap_zone(cv::Point2i t)
             overlap_zone.at<uchar>(corner.x+u,corner.y) = 2;
             limits = true;
         }
-        else if(mask.at<uchar>(corner.x+u, corner.y-1) == 1) // si cette colonne est à coé d'une colonne appartenant au mask -> appartient à l'ancienne synthèse
+        else if(mask.at<uchar>(corner.x+u, corner.y-1) == 1) // si cette colonne est à coté d'une colonne appartenant au mask -> appartient à l'ancienne synthèse
         {
             overlap_zone.at<uchar>(corner.x+u,corner.y) = 3;
             limits = true;
@@ -168,74 +168,83 @@ cv::Point2i minCut::update_overlap_zone(cv::Point2i t)
 
 
 void minCut::update_seams(cv::Point2i corner, cv::Mat mask_seam, int index_patch)
-// mask_seam = 3 valeurs ; 0: 0 si old et 1 si new; 1: cout à droite; 2: cout en bas
+// mask_seam = 0 si old et 1 si new - fait la taille du patch (uchar)
 // index_patch = numéro du nouveau patch
-// seams : 1: numéro du patch; 2: pixel avec lequel on calcul le cout; 3: le cout
+// seams : 1: numéro du patch; 2: pixel avec lequel on calcul le cout (uchar)
 // pixel avec lequel on calcul le cout : 1=en haut, 2=en bas, 3=à gauche, 4= à droite
 // possibilité d'optimiser
 {
+    std::cout<<"I am here 2.1"<<std::endl;
+
     bool found = false;
     for(int i=0; i<overlapRows; ++i)
+    {
         for(int j=0; j<overlapCols; ++j)
         {
             found = false;
             //Parcours les 4 voisins pour voir si frontière (un 1 et un 0 à coté)
-            int val_mask = mask_seam.at<cv::Vec3f>(i,j)[0];
+            int val_mask = mask_seam.at<uchar>(i,j);
             // faire conditions haut/bas
             if(i>0)
             {
-                if(mask_seam.at<cv::Vec3f>(i-1,j)[0] != val_mask) //haut
+                std::cout<<"I am here 2.2"<<std::endl;
+
+                if(mask_seam.at<uchar>(i-1,j) != val_mask) //haut
                 {
-                    seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[1] = 1;
-                    seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[2] = mask_seam.at<cv::Vec3f>(i-1,j)[2];
+                    seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[1] = 1;
                     if(val_mask == 1) // nouveau patch donc pas encore présent dans seams
-                        seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[0] = index_patch;
+                        seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[0] = index_patch;
                     //else garde le meme index, mais cout change car la frontiere a évoluée
-                    else if (val_mask == 0 && seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[0] == 0)
-                        seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[0] = 1;
+                    else if (val_mask == 0 && seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[0] == 0)
+                        seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[0] = 1;
                     found = true;
                 }
             }
             if(i<mask_seam.size[0]-1 && found == false)
             {
-                if(mask_seam.at<cv::Vec3f>(i+1,j)[0] != val_mask) //bas
+                std::cout<<"I am here 2.3"<<std::endl;
+
+                if(mask_seam.at<uchar>(i+1,j) != val_mask) //bas
                 {
-                    seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[1] = 2;
-                    seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[2] = mask_seam.at<cv::Vec3f>(i,j)[2];
+                    seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[1] = 2;
                     if(val_mask == 1)
-                        seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[0] = index_patch;
-                    else if (val_mask == 0 && seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[0] == 0)
-                        seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[0] = 1;
+                        seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[0] = index_patch;
+                    else if (val_mask == 0 && seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[0] == 0)
+                        seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[0] = 1;
                     found = true;
                 }
             }
             if(j>0 && found == false)
             {
-                if(mask_seam.at<cv::Vec3f>(i,j-1)[0] != val_mask) //gauche
+                std::cout<<"I am here 2.4"<<std::endl;
+
+                if(mask_seam.at<uchar>(i,j-1) != val_mask) //gauche
                 {
-                    seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[1] = 3;
-                    seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[2] = mask_seam.at<cv::Vec3f>(i,j-1)[1];
+                    seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[1] = 3;
                     if(val_mask == 1)
-                        seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[0] = index_patch;
-                    else if (val_mask == 0 && seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[0] == 0)
-                        seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[0] = 1;
+                        seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[0] = index_patch;
+                    else if (val_mask == 0 && seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[0] == 0)
+                        seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[0] = 1;
                     found = true;
                 }
             }
             if(j<mask_seam.size[1]-1 && found == false)
             {
-                if(mask_seam.at<cv::Vec3f>(i,j+1)[0] != val_mask) //droite
+                std::cout<<"I am here 2.5"<<std::endl;
+
+                if(mask_seam.at<uchar>(i,j+1) != val_mask) //droite
                 {
-                    seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[1] = 4;
-                    seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[2] = mask_seam.at<cv::Vec3f>(i,j)[1];
+                    seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[1] = 4;
                     if(val_mask == 1)
-                        seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[0] = index_patch;
-                    else if (val_mask == 0 && seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[0] == 0)
-                        seams.at<cv::Vec3f>(corner.x+i, corner.y+j)[0] = 1;
+                        seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[0] = index_patch;
+                    else if (val_mask == 0 && seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[0] == 0)
+                        seams.at<cv::Vec2b>(corner.x+i, corner.y+j)[0] = 1;
                     found = true;
                 }
             }
         }
+    }
+    std::cout<<"I am here 8"<<std::endl;
 }
 
 
@@ -445,8 +454,8 @@ void minCut::compute_minCut()
 
         g->add_node(nb_pixels);
 
-        // mask_seam = 3 valeurs ; 0: 0 si old et 1 si new; 1: cout à droite; 2: cout en bas
-        cv::Mat mask_seam = cv::Mat::zeros(overlapRows, overlapCols, CV_32FC3);
+        // mask_seam = 1 valeur ; 0 si old et 1 si new
+        cv::Mat mask_seam = cv::Mat::zeros(overlapRows, overlapCols, CV_8UC1);
 
         int num = 0;
         int seam_supp = 0;
@@ -458,11 +467,11 @@ void minCut::compute_minCut()
                 int y_crt = overlap_corner.y + j;
 
                 // On regarde si une ancienne bordure se trouve à cet endroit là
-                if(seams.at<cv::Vec3f>(x_crt, y_crt)[0] != 0)
+                if(seams.at<cv::Vec2b>(x_crt, y_crt)[0] != 0)
                 {
                     std::cout<<"(i, j) = "<<i<<" "<<j<<std::endl;
 
-                    if(seams.at<cv::Vec3f>(x_crt, y_crt)[1] == 2) // bas
+                    if(seams.at<cv::Vec2b>(x_crt, y_crt)[1] == 2) // bas
                     {
                         // Rajoute un noeud dans le graphe
                         seam_supp ++;
@@ -499,7 +508,7 @@ void minCut::compute_minCut()
                         g->add_edge(num+overlapRows, nb_pixels+seam_supp, cost, cost);
                     }
 
-                    else if(seams.at<cv::Vec3f>(x_crt, y_crt)[1] == 3) // droite
+                    else if(seams.at<cv::Vec2b>(x_crt, y_crt)[1] == 3) // droite
                     {
                         // Rajoute un noeud dans le graphe
                         seam_supp ++;
@@ -541,7 +550,6 @@ void minCut::compute_minCut()
                     //float cost_indirect = norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj)) + norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt));
                     float cost = compute_cost_edge(x_crt, y_crt, x_adj, y_adj, old_synthese, new_synthese);
                     g->add_edge(num, num+overlapRows, cost, cost);
-                    mask_seam.at<cv::Vec3f>(i,j)[2] = cost;
                     //std::cout<<"en dessous: "<<cost<<std::endl;
                 }
 
@@ -554,7 +562,6 @@ void minCut::compute_minCut()
                     //float cost_direct = norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt)) + norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj));
                     //float cost_indirect = norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj)) + norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt));
                     g->add_edge(num, num+1, cost, cost);
-                    mask_seam.at<cv::Vec3f>(i,j)[1] = cost;
                     //std::cout<<"a droite: "<<cost<<std::endl;
                 }
 
@@ -583,12 +590,12 @@ void minCut::compute_minCut()
                 {
                     std::cout<<"0 ";
                     new_synthese.at<cv::Vec3b>(x_crt, y_crt) = old_synthese.at<cv::Vec3b>(x_crt, y_crt);
-                    mask_seam.at<cv::Vec3f>(i,j)[0] = 0;
+                    mask_seam.at<cv::Vec3f>(i,j) = 0;
                 }
                 else //if(g->what_segment(num) == GraphType::SINK)
                 {
                     std::cout<<"1 ";
-                    mask_seam.at<cv::Vec3f>(i,j)[0] = 1;
+                    mask_seam.at<cv::Vec3f>(i,j) = 1;
                 }
                 // Sinon appartient au SINK donc garde la valeur du new_synthese
                 ++num;
@@ -596,14 +603,18 @@ void minCut::compute_minCut()
             std::cout<<std::endl;
         }
 
+        std::cout<<"I am here 1"<<std::endl;
+
         //delete g;
 
         update_seams(overlap_corner, mask_seam, iter+1);
-        update_init_value_seams(t);
+        std::cout<<"I am here 7"<<std::endl;
 
+        update_init_value_seams(t);
+        std::cout<<"I am here 3"<<std::endl;
 
         std::cout<<"mask_seams :"<<std::endl;
-        mat_affichage_vec(mask_seam);
+        mat_affichage(mask_seam);
         std::cout<<"seams :"<<std::endl;
         //mat_affichage_vec(seams);
         for(int u=-1; u<=overlapRows; ++u){
@@ -613,7 +624,7 @@ void minCut::compute_minCut()
             }
             std::cout<<std::endl;
         }
-        cv::Mat border_seams[3];
+        cv::Mat border_seams[2];
         split(seams,border_seams);
         imshow("seams",border_seams[0]);
 
@@ -622,8 +633,9 @@ void minCut::compute_minCut()
         new_synthese.copyTo(old_synthese);
         update_mask(t);
         overlap_zone.zeros(imRows,imCols,CV_8UC1);
+        std::cout<<"avant reset"<<std::endl;
         g->reset();
-
+        std::cout<<"avant reset"<<std::endl;
 
     }
 
