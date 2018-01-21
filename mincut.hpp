@@ -19,7 +19,7 @@ public:
 
     void update_seams(cv::Point2i corner, cv::Mat mask_seam, int index_patch);
 
-    void update_init_value_seams(cv::Point2i corner);
+    void update_init_value_seams(cv::Point2i corner_overlap, cv::Point2i corner, cv::Mat mask_seam);
 
     /** Find the best position for the next patch */
     cv::Point2i random_patch_placement(int &nb_pixels);
