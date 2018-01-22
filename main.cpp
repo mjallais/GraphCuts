@@ -16,7 +16,7 @@ float norm(cv::Vec3b a)
 int main()
 {
     // READ IMAGE
-    cv::Mat image = cv::imread("../GraphCuts/images/fraise_32.jpg");
+    cv::Mat image = cv::imread("../GraphCuts/images/nuts_32.jpg");
     if (!image.data)
     {
         std::cout << "Error reading file 1 "<< "image/" << std::endl;
