@@ -16,7 +16,7 @@ minCut::minCut(cv::Mat _texture) : imRows(100), imCols(100), overlapCols(0), ove
     init_value_seams = cv::Mat(imRows, imCols, CV_8UC2, cv::Scalar(255,255));
 
     maxSuperposedPixel = 256;
-    minSuperPosedPixel = 150;
+    minSuperPosedPixel = 256;
 
     border_mask = cv::Vec4i(imRows,0,imCols,0);
 }
@@ -38,7 +38,7 @@ minCut::minCut(cv::Mat _texture, int rows, int cols) : overlapCols(0), overlapRo
     init_value_seams = cv::Mat(imRows, imCols, CV_8UC2, cv::Scalar(255,255));
 
     maxSuperposedPixel = 256;
-    minSuperPosedPixel = 150;
+    minSuperPosedPixel = 256;
 
     border_mask = cv::Vec4i(imRows,0,imCols,0);
 }
@@ -47,21 +47,21 @@ minCut::minCut(cv::Mat _texture, int rows, int cols) : overlapCols(0), overlapRo
 void minCut::init()
 {
     // Copie de l'image originale dans l'image de synthèse que l'on cherche à créer
-    cv::Point2i t (floor(imRows/3),floor(imCols/3));
+    cv::Point2i t (floor(imRows/5),floor(imCols/5));
     texture(cv::Range(0,patchRows),cv::Range(0,patchCols)).copyTo(old_synthese(cv::Rect(t.y, t.x, patchCols, patchRows)));
     old_synthese.copyTo(new_synthese);
 
     update_mask(t);
     update_init_value_seams(t,t, cv::Mat::ones(patchRows,patchCols,CV_8UC1));
-    std::cout<<"init_value_seams à l'initialisation"<<std::endl;
-    for(int u=-1; u<=patchRows; ++u){
-        for(int v=-1; v<=patchCols; ++v)
-        {
-            //std::cout<<"("<<(int)init_value_seams.at<cv::Vec2b>(overlap_corner.x+u,overlap_corner.y+v)[0]<<","<<(int)init_value_seams.at<cv::Vec2b>(overlap_corner.x+u,overlap_corner.y+v)[1]<<") ";
-            std::cout<<(int)init_value_seams.at<cv::Vec2b>(t.x+u,t.y+v)[0]<<" ";
-        }
-        std::cout<<std::endl;
-    }
+//    std::cout<<"init_value_seams à l'initialisation"<<std::endl;
+//    for(int u=-1; u<=patchRows; ++u){
+//        for(int v=-1; v<=patchCols; ++v)
+//        {
+//            //std::cout<<"("<<(int)init_value_seams.at<cv::Vec2b>(overlap_corner.x+u,overlap_corner.y+v)[0]<<","<<(int)init_value_seams.at<cv::Vec2b>(overlap_corner.x+u,overlap_corner.y+v)[1]<<") ";
+//            std::cout<<(int)init_value_seams.at<cv::Vec2b>(t.x+u,t.y+v)[0]<<" ";
+//        }
+//        std::cout<<std::endl;
+//    }
 }
 
 
@@ -83,6 +83,16 @@ void minCut::update_mask(cv::Point2i t)
         border_mask[3]=t.y+patchCols;
 
     std::cout<<"border_mask = "<<border_mask[0]<<" "<<border_mask[1]<<" "<<border_mask[2]<<" "<<border_mask[3]<<std::endl;
+    std::cout<<"mask :"<<std::endl;
+    for(int u=-1; u<=patchRows; ++u)
+    {
+        for(int v=-1; v<=patchCols; ++v)
+        {
+            std::cout<<(int)mask.at<uchar>(t.x+u, t.y+v);
+        }
+        std::cout<<std::endl;
+    }
+
 }
 
 
@@ -437,6 +447,11 @@ void minCut::compute_minCut()
     for(int iter=1; iter<10; ++iter)
     {
         std::cout<<"iteration "<<iter<<std::endl;
+
+        imshow("old", old_synthese); cv::waitKey(0);
+        cv::namedWindow("new",CV_WINDOW_NORMAL);
+        imshow("new", new_synthese); cv::waitKey(0);
+
         int nb_pixels = 0;
         cv::Point2i t = entire_patch_matching_placement(nb_pixels);
         if(t == cv::Point2i(999,999))
@@ -447,9 +462,12 @@ void minCut::compute_minCut()
         std::cout<<"t = "<<t.x<<" "<<t.y<<std::endl;
 
         texture(cv::Range(0,patchRows),cv::Range(0,patchCols)).copyTo(new_synthese(cv::Rect(t.y,t.x,patchCols,patchRows)));
+        imshow("new", new_synthese); cv::waitKey(0);
+
         cv::Point2i overlap_corner = update_overlap_zone(t);
         std::cout<<"overlap_zone"<<std::endl;
-        for(int u=-1; u<=overlapRows; ++u){
+        for(int u=-1; u<=overlapRows; ++u)
+        {
             for(int v=-1; v<=overlapCols; ++v)
             {
                 std::cout<<(int)overlap_zone.at<uchar>(overlap_corner.x+u,overlap_corner.y+v);
@@ -457,22 +475,19 @@ void minCut::compute_minCut()
             std::cout<<std::endl;
         }
 
-        imshow("old", old_synthese); cv::waitKey(0);
-        cv::namedWindow("new",CV_WINDOW_NORMAL);
-        imshow("new", new_synthese); cv::waitKey(0);
-
-        std::cout<<"init_value_seams"<<std::endl;
-        for(int u=0; u<imRows; ++u){
-            for(int v=0; v<imCols; ++v)
-            {
-                if(init_value_seams.at<cv::Vec2b>(u,v) != cv::Vec2b(255,255))
-                    std::cout<<(int)init_value_seams.at<cv::Vec2b>(u,v)[0]<<" ";
-                else
-                    std::cout<<".";
-                //std::cout<<"("<<(int)init_value_seams.at<cv::Vec2b>(overlap_corner.x+u,overlap_corner.y+v)[0]<<","<<(int)init_value_seams.at<cv::Vec2b>(overlap_corner.x+u,overlap_corner.y+v)[1]<<") ";
-            }
-            std::cout<<std::endl;
-        }
+//        std::cout<<"init_value_seams"<<std::endl;
+//        for(int u=0; u<imRows; ++u)
+//        {
+//            for(int v=0; v<imCols; ++v)
+//            {
+//                if(init_value_seams.at<cv::Vec2b>(u,v) != cv::Vec2b(255,255))
+//                    std::cout<<(int)init_value_seams.at<cv::Vec2b>(u,v)[0]<<" ";
+//                else
+//                    std::cout<<".";
+//                //std::cout<<"("<<(int)init_value_seams.at<cv::Vec2b>(overlap_corner.x+u,overlap_corner.y+v)[0]<<","<<(int)init_value_seams.at<cv::Vec2b>(overlap_corner.x+u,overlap_corner.y+v)[1]<<") ";
+//            }
+//            std::cout<<std::endl;
+//        }
 
         std::cout<<"seams"<<std::endl;
         for(int u=-1; u<=overlapRows; ++u){
@@ -513,6 +528,9 @@ void minCut::compute_minCut()
                 int x_crt = overlap_corner.x + i;
                 int y_crt = overlap_corner.y + j;
 
+                bool bas = false;
+                bool droite = false;
+
                 if(mask.at<uchar>(x_crt,y_crt)==1)
                 {
                     // On regarde si une ancienne bordure se trouve à cet endroit là
@@ -523,6 +541,8 @@ void minCut::compute_minCut()
                         {
                             if(overlap_zone.at<uchar>(x_crt,y_crt) == 1 && mask.at<uchar>(x_crt+1,y_crt)==1) // Pour éviter de rajouter un seam sur la bordure
                             {
+                                bas = true;
+
                                 // Rajoute un noeud dans le graphe
                                 seam_supp ++;
                                 g->add_node();
@@ -564,6 +584,8 @@ void minCut::compute_minCut()
                         {
                             if(overlap_zone.at<uchar>(x_crt,y_crt) == 1 && mask.at<uchar>(x_crt,y_crt+1)==1)
                             {
+                                droite = true;
+
                                 // Rajoute un noeud dans le graphe
                                 seam_supp ++;
                                 g->add_node();
@@ -598,7 +620,7 @@ void minCut::compute_minCut()
                         }
                     }
 
-                    if(i<overlapRows-1 && mask.at<uchar>(x_crt+1,y_crt)==1) // sauf bordure bas - calcul du cout avec le point en dessous et la réciproque
+                    if(i<overlapRows-1 && mask.at<uchar>(x_crt+1,y_crt)==1 && bas == false) // sauf bordure bas - calcul du cout avec le point en dessous et la réciproque
                     {
                         // liaison avec le point en dessous
                         int x_adj = x_crt + 1;
@@ -610,7 +632,7 @@ void minCut::compute_minCut()
                         //std::cout<<"en dessous: "<<cost<<std::endl;
                     }
 
-                    if(j<overlapCols-1 && mask.at<uchar>(x_crt,y_crt+1)==1) // sauf bordure droite - calcul du cout avec le point à droite et la réciproque
+                    if(j<overlapCols-1 && mask.at<uchar>(x_crt,y_crt+1)==1 && droite == false) // sauf bordure droite - calcul du cout avec le point à droite et la réciproque
                     {
                         // liaison avec le point à droite
                         int x_adj = x_crt;
@@ -633,7 +655,7 @@ void minCut::compute_minCut()
             }
 
         std::cout<<"avant calcul maxflow()"<<std::endl;
-        std::cout<<"Nombre de nodes dans graph = "<<g->get_node_num()<<" devrait etre num+seam_supp = "<<num+seam_supp<<std::endl;
+        std::cout<<"Nombre de nodes dans graph = "<<g->get_node_num()<<" devrait etre num+seam_supp = "<<num<<"+"<<seam_supp<<"="<<num+seam_supp<<std::endl;
         int flow = g -> maxflow();
         std::cout<<"après calcul maxflow()"<<std::endl;
 

@@ -23,7 +23,7 @@ int main()
         exit(0);
     }
 
-    minCut mincut(image,image.size[0]*3,image.size[1]*3);
+    minCut mincut(image,image.size[0]*1.5,image.size[1]*3);
 
     mincut.compute_minCut();
 
