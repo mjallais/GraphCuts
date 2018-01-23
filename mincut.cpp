@@ -16,7 +16,7 @@ minCut::minCut(cv::Mat _texture) : imRows(100), imCols(100), overlapCols(0), ove
     init_value_seams = cv::Mat(imRows, imCols, CV_8UC2, cv::Scalar(255,255));
 
     maxSuperposedPixel = 256;
-    minSuperPosedPixel = 256;
+    minSuperPosedPixel = 150;
 
     border_mask = cv::Vec4i(imRows,0,imCols,0);
 }
@@ -38,7 +38,7 @@ minCut::minCut(cv::Mat _texture, int rows, int cols) : overlapCols(0), overlapRo
     init_value_seams = cv::Mat(imRows, imCols, CV_8UC2, cv::Scalar(255,255));
 
     maxSuperposedPixel = 256;
-    minSuperPosedPixel = 256;
+    minSuperPosedPixel = 128;
 
     border_mask = cv::Vec4i(imRows,0,imCols,0);
 }
@@ -115,7 +115,7 @@ cv::Point2i minCut::update_overlap_zone(cv::Point2i t)
     {
         for(int v=0; v<patchCols; ++v)
         {
-            if(mask.at<uchar>(t.x+u, t.y+v) >= 1)
+            if(mask.at<uchar>(t.x+u, t.y+v) == 1)
             {
                 overlap_zone.at<uchar>(t.x+u, t.y+v) = 1;
                 if(first)
@@ -129,7 +129,7 @@ cv::Point2i minCut::update_overlap_zone(cv::Point2i t)
                 n+=1;
             }
         }
-        if(n!=0)
+        if(n!=0 && n>overlapCols) //Seul truc pas evident
             overlapCols=n;
         n=0;
     }
@@ -444,7 +444,7 @@ void minCut::compute_minCut()
     typedef Graph<int,int,int> GraphType;
     GraphType *g = new GraphType(/*estimated # of nodes*/ /*nb_pixels*/ maxSuperposedPixel, /*estimated # of edges*/ (overlapCols-1)*(overlapRows-1));
 
-    for(int iter=1; iter<10; ++iter)
+    for(int iter=1; iter<25 ; ++iter)
     {
         std::cout<<"iteration "<<iter<<std::endl;
 
@@ -576,7 +576,7 @@ void minCut::compute_minCut()
                                 color3 = abs(new_synthese.at<cv::Vec3b>(x_crt, y_crt)[2] - texture.at<cv::Vec3b>(s_At[0], s_At[1])[2]) + abs(new_synthese.at<cv::Vec3b>(x_crt+1, y_crt)[2] - texture.at<cv::Vec3b>(t_At[0], t_At[1])[2]);
                                 cost = (color1+color2+color3)/3;
                                 //std::cout<<"cost entre seam et 4 = "<<cost<<std::endl;
-                                g->add_edge(num+overlapRows, nb_pixels-1+seam_supp, cost, cost);
+                                g->add_edge(num+overlapCols, nb_pixels-1+seam_supp, cost, cost);
                             }
                         }
 
@@ -628,8 +628,8 @@ void minCut::compute_minCut()
                         //float cost_direct = norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt)) + norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj));
                         //float cost_indirect = norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj)) + norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt));
                         float cost = compute_cost_edge(x_crt, y_crt, x_adj, y_adj, old_synthese, new_synthese);
-                        g->add_edge(num, num+overlapRows, cost, cost);
-                        //std::cout<<"en dessous: "<<cost<<std::endl;
+                        g->add_edge(num, num+overlapCols, cost, cost);
+//                         std::cout<<"en dessous: "<<cost<<std::endl;
                     }
 
                     if(j<overlapCols-1 && mask.at<uchar>(x_crt,y_crt+1)==1 && droite == false) // sauf bordure droite - calcul du cout avec le point à droite et la réciproque
@@ -641,14 +641,18 @@ void minCut::compute_minCut()
                         //float cost_direct = norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt)) + norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj));
                         //float cost_indirect = norm(old_synthese.at<cv::Vec3b>(x_adj,y_adj) - new_synthese.at<cv::Vec3b>(x_adj,y_adj)) + norm(old_synthese.at<cv::Vec3b>(x_crt,y_crt) - new_synthese.at<cv::Vec3b>(x_crt,y_crt));
                         g->add_edge(num, num+1, cost, cost);
-                        //std::cout<<"a droite: "<<cost<<std::endl;
+//                        std::cout<<"a droite: "<<cost<<std::endl;
                     }
 
                     if(overlap_zone.at<uchar>(x_crt,y_crt) == 2) // appartient au nouveau patch
+                    {
                         g->add_tweights( num,   /* capacities old=source new=sink */ 0, 16384 ); // 1/4 de la valeur maximale possible pour un int (32 signed oint) = 65536/4
+                    }
 
                     if(overlap_zone.at<uchar>(x_crt,y_crt) == 3) // appartient à l'image de base
+                    {
                         g->add_tweights( num,   /* capacities old=source new=sink*/ 16384, 0 );
+                    }
 
                     ++num;
                 }
