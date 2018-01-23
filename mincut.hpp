@@ -17,6 +17,9 @@ public:
     /** Update the zone where the Image and the new patch met */
     cv::Point2i update_overlap_zone(cv::Point2i t);
 
+    int num_neigbors_in_overlap(cv::Point2i p);
+    int num_neigbors_in_mask(cv::Point2i p);
+
     void update_seams(cv::Point2i corner, cv::Mat mask_seam, int index_patch);
 
     void update_init_value_seams(cv::Point2i corner_overlap, cv::Point2i corner, cv::Mat mask_seam);
