@@ -20,3 +20,4 @@ add_executable(
 )
 
 TARGET_LINK_LIBRARIES(graph_cuts -lm -ldl -lGLEW ${OpenCV_LIBRARIES} -fopenmp)
+
