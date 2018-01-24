@@ -38,7 +38,7 @@ public:
     bool allImageFilled();
 
     /** Run fonction that execute the algorithm */
-    void compute_minCut();
+    cv::Mat compute_minCut(int method);
 
 private:
     /** Matrix of the texture that we want to reproduce */
@@ -81,7 +81,7 @@ private:
 
 
     /** Test if a translation is valid or not */
-    bool isTranslationValid(cv::Point2i t);
+    bool isTranslationValid(cv::Point2i t, int &nb_pixels);
     float compute_translation_cost(cv::Mat &update_synthese, int i, int j, int &nb_pixels);
 
 

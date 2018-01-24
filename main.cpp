@@ -16,7 +16,7 @@ float norm(cv::Vec3b a)
 int main()
 {
     // READ IMAGE
-    cv::Mat image = cv::imread("../GraphCuts/images/nuts_32.jpg");
+    cv::Mat image = cv::imread("../GraphCuts/images/puzzle.jpg");
     if (!image.data)
     {
         std::cout << "Error reading file 1 "<< "image/" << std::endl;
@@ -25,10 +25,23 @@ int main()
 
     minCut mincut(image,image.size[0]*3,image.size[1]*3);
 
-    mincut.compute_minCut();
+    int method = 0; //0 = entire 1=random
+    cv::Mat result = mincut.compute_minCut(method);
+
+    cv::imwrite("../GraphCuts/résultats/puzzle25iter-entire.jpg",result);
+    return 0;
+}
 
 
-    /** TEST */
+
+
+
+
+
+
+
+
+/** TEST */
 //    typedef Graph<int,int,int> GraphType;
 //    GraphType *g = new GraphType(/*estimated # of nodes*/ 4, /*estimated # of edges*/ 4);
 
@@ -68,8 +81,3 @@ int main()
 //        printf("node3 is in the SINK set\n");
 
 //    delete g;
-
-
-    return 0;
-}
-
