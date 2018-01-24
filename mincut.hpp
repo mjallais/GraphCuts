@@ -50,7 +50,7 @@ private:
     /** Is a mask of old_synthess */
     cv::Mat mask; // Useful to know if a pixel has been filled or not with the new texture (0 = not filled ; 1 = filled)
 
-    /** Mask of the overlap zone where the image and the new texture met*/
+    /** Mask of the overlap zone where the image and the new texture meet*/
     cv::Mat overlap_zone;
 
     /** Contain the seams of previous cuts and their cost 1: patch the pixel belongs to, 2: point with which we compute the cost, 3: cost*/
