@@ -28,15 +28,9 @@ int main()
     int method = 0; //0 = entire 1=random
     cv::Mat result = mincut.compute_minCut(method);
 
-    cv::imwrite("../GraphCuts/résultats/puzzle25iter-entire.jpg",result);
+    cv::imwrite("../GraphCuts/résultats/test.jpg",result);
     return 0;
 }
-
-
-
-
-
-
 
 
 
