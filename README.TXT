@@ -16,5 +16,4 @@ Pour compiler notre implémentation :
 Pour avoir des résultats de plus haute résolution, il faut utiliser les images avec '_128'. Le résultat est alors de meilleur qualité mais nécessite plus de temps de compilation.
 
 
-Dans le dossier résultat certains résultats détaillé dans le rapport sont disponibles.
 
