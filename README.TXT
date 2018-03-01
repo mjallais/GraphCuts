@@ -13,6 +13,7 @@ Pour compiler notre implémentation :
      
 - Le résultat se trouva dans le dossier résultats avec le nom de fichier que vous avez choisi
 
+Pour avoir des résultats de plus haute résolution, il faut utiliser les images avec '_128'. Le résultat est alors de meilleur qualité mais nécessite plus de temps de compilation.
 
 
 Dans le dossier résultat certains résultats détaillé dans le rapport sont disponibles.

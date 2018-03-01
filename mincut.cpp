@@ -16,7 +16,7 @@ minCut::minCut(cv::Mat _texture) : imRows(100), imCols(100), overlapCols(0), ove
     init_value_seams = cv::Mat(imRows, imCols, CV_8UC2, cv::Scalar(255,255));
 
     maxSuperposedPixel = 256;
-    minSuperPosedPixel = 150;
+    minSuperPosedPixel = 10;
 
     border_mask = cv::Vec4i(imRows,0,imCols,0);
 }
@@ -37,8 +37,8 @@ minCut::minCut(cv::Mat _texture, int rows, int cols) : overlapCols(0), overlapRo
     seams = cv::Mat::zeros(imRows,imCols,CV_8UC2);
     init_value_seams = cv::Mat(imRows, imCols, CV_8UC2, cv::Scalar(255,255));
 
-    maxSuperposedPixel = 128*30;
-    minSuperPosedPixel = 128*14;
+    maxSuperposedPixel = patchRows*30;
+    minSuperPosedPixel = patchCols*14;
 
     border_mask = cv::Vec4i(imRows,0,imCols,0);
 }
